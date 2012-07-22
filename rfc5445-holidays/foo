@@ -1,0 +1,204 @@
+#!/usr/bin/python
+# Copyright (C) 2012 Luca Filipozzi
+
+# http://en.wikipedia.org/wiki/ICalendar
+# http://www.rfc-editor.org/info/rfc2445
+# http://www.rfc-editor.org/info/rfc5545 (obsoletes RFC 2445)
+
+# python - http://labix.org/python-dateutil/
+# java   - http://code.google.com/p/google-rfc-2445/
+# .net   - http://sourceforge.net/projects/dday-ical/
+
+import argparse
+from datetime import datetime as dt
+from dateutil.rrule import *
+from dateutil.relativedelta import *
+
+parser = argparse.ArgumentParser(description='compute UBC holidays')
+parser.add_argument('year', metavar='year', type=int, nargs=1, help='the year')
+args = parser.parse_args()
+
+dtstart = dt(args.year[0], 1, 1)
+
+workdays = (MO, TU, WE, TH, FR)
+
+rs = rruleset()
+
+# mandated : New Year's Day : January 1 (or NBD for UBC)
+#   where Next Business Day (NBD) means:
+#   - if holiday falls on SA or SU, then take MO in lieu
+#   to compute:
+#   - restrict to first month: bymonth=1
+#   - restrict to three days:  bymonthday=(1,2,3)
+#   - restrict to work days:   byweekday=(MO,TU,WE,TH,FR)
+#   - restrict to first value: bysetpos=1
+#   examples:
+#   - if 01-01 is MO, then (( 1, 2, 3) && (MO,TU,WE,TH,FR))[1]
+#         is equivalent to ((MO,TU,WE) && (MO,TU,WE,TH,FR))[1]
+#         is equivalent to (MO,TU,WE)[1]
+#         is equivalent to MO
+#         is equivalent to 01-01 (since falls on week day)
+#   - if 01-01 is FR, then (( 1, 2, 3) && (MO,TU,WE,TH,FR))[1]
+#         is equivalent to ((FR,SA,SU) && (MO,TU,WE,TH,FR))[1]
+#         is equivalent to (FR)[1]
+#         is equivalent to FR
+#         is equivalent to 01-01 (since falls on week day)
+#   - if 01-01 is SA, then (( 1, 2, 3) && (MO,TU,WE,TH,FR))[1]
+#         is equivalent to ((SA,SU,MO) && (MO,TU,WE,TH,FR))[1]
+#         is equivalent to (MO)[1]
+#         is equivalent to MO
+#         is equivalent to 01-03 (since falls on week end)
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        bymonth=1,              # restrict to first month (January)
+        bymonthday=(1,2,3),     # restrict to three days
+        byweekday=workdays,     # restrict to work days (Monday - Friday)
+        bysetpos=1,             # restrict to first value
+)
+rs.rrule(r)
+
+# mandated : Family Day : 2nd Monday in February (introduced 2013)
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dt(2013,1,1),   # restrict to 2013 onwards
+        bymonth=2,              # restrict to second month (February)
+        byweekday=MO(2),        # restrict to second Monday
+)
+rs.rrule(r)
+
+# mandated : Good Friday : Friday before Easter Sunday
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        byeaster=-2,            # restrict to Easter Sunday - 2 days
+)
+rs.rrule(r)
+
+# UBC only : Easter Monday : Monday after Easter Sunday
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        byeaster=+1,            # restrict to Easter Sunday + 1 day
+)
+rs.rrule(r)
+
+# mandated : Victoria Day : last Monday before May 25
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        bymonth=5,              # restrict to fifth month (May)
+        bymonthday=(18,19,20,21,22,23,24), # restrict to seven days prior to May 25
+        byweekday=MO,           # restrict to Monday
+        bysetpos=1,             # restrict to first value
+)
+rs.rrule(r)
+
+# mandated : Canada Day : July 1 (or NBD for UBC)
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        bymonth=7,              # restrict seventh month (July)
+        bymonthday=(1,2,3),     # restrict to first three days
+        byweekday=workdays,     # restrict to work days (Monday - Friday)
+        bysetpos=1,             # restrict to first value
+)
+rs.rrule(r)
+
+# mandated : BC Day : 1st Monday in August
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        bymonth=8,              # restrict to eighth month (August)
+        byweekday=MO(1),        # restrict to first Monday
+)
+rs.rrule(r)
+
+# mandated : Labour Day : 1st Monday in September
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        bymonth=9,              # restrict to ninth month (September)
+        byweekday=MO(1),        # restrict to first Monday
+)
+rs.rrule(r)
+
+# mandated : Thanksgiving Day : 2nd Monday in October
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        bymonth=10,             # restrict to tenth month (October)
+        byweekday=MO(2),        # restrict to second Monday
+)
+rs.rrule(r)
+
+# mandated : Remembrance Day : September 11 (or NBD for UBC)
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        bymonth=11,             # restrict to eleventh month (November)
+        bymonthday=(11,12,13),  # restrict to eleventh day + 2 (note 1)
+        byweekday=workdays,     # restrict to work days (Monday - Friday)
+        bysetpos=1,             # restrict to first value
+)
+rs.rrule(r)
+
+# mandated : Christmas Day : December 25 (or NBD for UBC)
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        bymonth=12,             # restrict to twelfth month (December)
+        bymonthday=(25,26,27,28,29,30,31), # restrict to week after Dec 25 (inc)
+        byweekday=workdays,     # restrict to work days (Monday - Friday)
+        bysetpos=1,             # restrict to first value
+)
+rs.rrule(r)
+
+# UBC only : Boxing Day : December 26 or NBD
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        bymonth=12,             # restrict to twelfth month (December)
+        bymonthday=(25,26,27,28,29,30,31), # restrict to week after Dec 25 (inc)
+        byweekday=workdays,     # restrict to work days (Monday - Friday)
+        bysetpos=2,             # restrict to second value
+)
+rs.rrule(r)
+
+# UBC only : UBC Extra : December 27 or NBD
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        bymonth=12,             # restrict to twelfth month (December)
+        bymonthday=(25,26,27,28,29,30,31), # restrict to week after Dec 25 (inc)
+        byweekday=workdays,     # restrict to work days (Monday - Friday)
+        bysetpos=3,             # restrict to third value
+)
+rs.rrule(r)
+
+# UBC only : UBC Extra : December 28 or NBD
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        bymonth=12,             # restrict to twelfth month (December)
+        bymonthday=(25,26,27,28,29,30,31), # restrict to week after Dec 25 (inc)
+        byweekday=workdays,     # restrict to work days (Monday - Friday)
+        bysetpos=4,             # restrict to fourth value
+)
+rs.rrule(r)
+
+# UBC only : UBC Extra : December 29 or NBD
+r = rrule(
+        YEARLY,                 # recurs once annually
+        dtstart=dtstart,        # restrict to the given year onwards
+        bymonth=12,             # restrict to twelfth month (December)
+        bymonthday=(25,26,27,28,29,30,31), # restrict to week after Dec 25 (inc)
+        byweekday=workdays,     # restrict to work days (Monday - Friday)
+        bysetpos=5,             # restrict to fifth value
+)
+rs.rrule(r)
+
+for r in rs.between(dtstart, dtstart + relativedelta(days=364), inc=True):
+    print r.date()
+
+# vim: set ts=4 sw=4 et si:
