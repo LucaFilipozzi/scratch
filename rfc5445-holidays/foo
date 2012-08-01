@@ -67,7 +67,8 @@ r = rrule(
         YEARLY,                 # recurs once annually
         dtstart=dt(2013,1,1),   # restrict to 2013 onwards
         bymonth=2,              # restrict to second month (February)
-        byweekday=MO(2),        # restrict to second Monday
+        byweekday=MO,           # restrict to second Monday
+        bysetpos=2,
 )
 rs.rrule(r)
 
@@ -119,7 +120,8 @@ r = rrule(
         YEARLY,                 # recurs once annually
         dtstart=dtstart,        # restrict to the given year onwards
         bymonth=8,              # restrict to eighth month (August)
-        byweekday=MO(1),        # restrict to first Monday
+        byweekday=MO,           # restrict to first Monday
+        bysetpos=1
 )
 rs.rrule(r)
 
@@ -129,7 +131,8 @@ r = rrule(
         YEARLY,                 # recurs once annually
         dtstart=dtstart,        # restrict to the given year onwards
         bymonth=9,              # restrict to ninth month (September)
-        byweekday=MO(1),        # restrict to first Monday
+        byweekday=MO,           # restrict to first Monday
+        bysetpos=1,
 )
 rs.rrule(r)
 
@@ -139,7 +142,8 @@ r = rrule(
         YEARLY,                 # recurs once annually
         dtstart=dtstart,        # restrict to the given year onwards
         bymonth=10,             # restrict to tenth month (October)
-        byweekday=MO(2),        # restrict to second Monday
+        byweekday=MO,           # restrict to second Monday
+        bysetpos=2,
 )
 rs.rrule(r)
 
